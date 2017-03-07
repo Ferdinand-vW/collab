@@ -13,23 +13,39 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     Lib
-  build-depends:       base >= 4.7 && < 5
-  default-language:    Haskell2010
-
 executable collab-exe
-  hs-source-dirs:      app
+  hs-source-dirs:      server/src
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  other-modules: Server, API, Html.Index
   build-depends:       base
-                     , collab
+                     , servant
+                    , servant-server
+                    , servant-blaze
+                    , base-compat
+                    , mtl
+                    , aeson
+                    , aeson-compat
+                    , attoparsec
+                    , bytestring
+                    , string-conversions
+                    , time
+                    , http-media
+                    , wai
+                    , warp
+                    , directory
+                    , blaze-markup
+                    , blaze-html
+                    , lucid
+                    , hakyll
+                    , hamlet
+                    , heist
   default-language:    Haskell2010
 
 test-suite collab-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
+  hs-source-dirs:      server/test
+                    ,  server/src
   main-is:             Spec.hs
   build-depends:       base
                      , collab
