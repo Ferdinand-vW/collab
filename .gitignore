@@ -16,4 +16,16 @@ cabal.sandbox.config
 *.hp
 *.eventlog
 .stack-work/
+# elm-package generated files
+elm-stuff
+# elm-repl generated files
+repl-temp-*
 cabal.project.local
+# Dependencies
+.psci_modules
+bower_components
+node_modules
+
+# Generated files
+.psci
+output

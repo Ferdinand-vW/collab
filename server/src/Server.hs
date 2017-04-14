@@ -4,32 +4,46 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Server (
-    app, test
+    app
 ) where
 
+import Control.Monad.Trans.Class
+import Control.Monad.IO.Class
+import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
+
 import Servant
-import Servant.HTML.Blaze
 import Servant.Utils.StaticFiles
+import Servant.HTML.Blaze
+import Text.Mustache
 
 import API
-import Html.Index
 import Room
 
-api' :: Proxy (RoomAPI :<|> Raw)
-api' = Proxy
-
 app :: Application
-app = serve api' server
+app = serve api server
 
-server :: Server (RoomAPI :<|> Raw)
-server = room :<|> serveDirectory "client"
+server :: Server API
+server = room :<|> serveRoom :<|> serveIndex :<|> serveIndex
 
-test :: IO Int
-test = do
-    x <- return 5
-    y <- return "ok"
-    return x
+serveIndex :: Server HTML_Index
+serveIndex = serveDirectoryFileServer "static/index"
 
--- Server RoomAPI
+serveRoom :: Server HTML_Room
+serveRoom n req resp = do
+    compiled <- liftIO $ automaticCompile ["./templates"] "index.mustache"
+    x <- case compiled of
+            Left err -> liftIO (print err)
+            Right template -> do
+                let t = substitute template (Room 1 "test")
+                liftIO $ TIO.writeFile "static/room/index.html" t 
+
+    x `seq` serveDirectoryFileServer "static/room" req resp
+
+-- API_Room
 room :: Int -> Handler Room
-room n = return $ Room n [] []
+room n = return $ Room n "Test"
+
+instance ToMustache Room where
+    toMustache room = object
+        [ T.pack "id" ~> Room.id room]

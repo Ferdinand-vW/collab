@@ -6,31 +6,21 @@ module API where
 
 import Data.Aeson.Compat
 import GHC.Generics
-import Servant
 
-import Text.Blaze.Html5
+import Servant
 import Servant.HTML.Blaze
 
 import Room
-import Html.Index
 
-data Page = IndexPage | RoomPage Room | ErrorPage
+type API = API_All
+    :<|> HTML_Room
+    :<|> HTML_Index
+    :<|> Raw
 
-type API = IndexAPI :<|> RoomAPI
-type IndexAPI = Get '[HTML] Page
-
-instance ToMarkup Page where
-    toMarkup IndexPage = indexPage
-    toMarkup (RoomPage r) = roomPage r
-    toMarkup ErrorPage = errorPage
+type HTML_Room = "room" :> Capture "id" Int :> Raw
+type HTML_Index = Raw
+type API_All = "api" :> API_Room
+type API_Room = "room" :> Capture "id" Int :> Get '[JSON] Room
 
 api :: Proxy API
 api = Proxy
-
-indexAPI :: Proxy IndexAPI
-indexAPI = Proxy
-
-type RoomAPI = "room" :> Capture "id" Int :> Get '[JSON] Room
-
-roomAPI :: Proxy RoomAPI
-roomAPI = Proxy

@@ -6,9 +6,8 @@ import Data.Aeson.Compat
 import GHC.Generics
 
 data Room = Room
-    { roomName :: Int
-    , users :: [String]
-    , code :: [String]
+    { id :: Int
+    , name :: String
     } deriving Generic
 
 instance ToJSON Room
