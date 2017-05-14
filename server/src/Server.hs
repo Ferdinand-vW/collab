@@ -4,46 +4,56 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Server (
-    app
+    server,
+    roomApi
 ) where
 
+import Control.Monad.Logger
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
-import qualified Data.Text as T
+import Control.Monad.Reader
 import qualified Data.Text.IO as TIO
+import qualified Data.Text as T
+import Data.Time.Clock
 
+import Network.Wai (ResponseReceived, Request, Response)
 import Servant
+import Servant.Server.Internal.ServantErr (responseServantErr)
 import Servant.Utils.StaticFiles
-import Servant.HTML.Blaze
-import Text.Mustache
 
+import App (AppM, appToHandle, makeRoom, makeRoomWUser, getRoom)
+import Database (insertRoom, selectRoom)
 import API
 import Room
-
-app :: Application
-app = serve api server
+import Template
+import Time
+import AppWai
 
 server :: Server API
-server = room :<|> serveRoom :<|> serveIndex :<|> serveIndex
+server = enter appToHandle roomApi :<|> (runWaiAsApp . serveRoom) :<|> serveIndex
 
 serveIndex :: Server HTML_Index
 serveIndex = serveDirectoryFileServer "static/index"
 
-serveRoom :: Server HTML_Room
+serveRoom :: Integer -> AppMWai
 serveRoom n req resp = do
-    compiled <- liftIO $ automaticCompile ["./templates"] "index.mustache"
-    x <- case compiled of
-            Left err -> liftIO (print err)
-            Right template -> do
-                let t = substitute template (Room 1 "test")
-                liftIO $ TIO.writeFile "static/room/index.html" t 
+  mroom <- App.getRoom n
+  case mroom of
+    Nothing -> do
+      lift $ throwError $ err404
+    Just room -> liftIO $ compile "room/index.mustache" room "static/room/index.html"
 
-    x `seq` serveDirectoryFileServer "static/room" req resp
+  liftIO $ serveDirectoryFileServer "static/room" req resp
+
+roomApi :: ServerT API_Room (AppM Handler)
+roomApi = createRoom :<|> Server.getRoom
+
+createRoom :: Maybe String -> AppM Handler Integer
+createRoom Nothing = makeRoom
+createRoom (Just uname) = makeRoomWUser uname
+
+  
 
 -- API_Room
-room :: Int -> Handler Room
-room n = return $ Room n "Test"
-
-instance ToMustache Room where
-    toMustache room = object
-        [ T.pack "id" ~> Room.id room]
+getRoom :: Integer -> AppM Handler (Maybe Room)
+getRoom n = App.getRoom n

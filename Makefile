@@ -1,8 +1,11 @@
-all: setup build client-compile
+all: setup server-build client-compile
 
 setup: client-setup server-setup
 
 build: client-build server-build
+
+client:
+	(client-setup ; client-build)
 
 client-setup:
 	(cd client ; bower i)
@@ -11,7 +14,9 @@ client-build:
 	(cd client ; pulp build)
 
 client-compile:
-	(cd client ; pulp build -O --to ../static/room/main.js)
+	(cd client ; pulp build -O --to ../static/index/main.js)
+
+server: server-setup server-build
 
 server-setup:
 	stack setup

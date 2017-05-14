@@ -5,5 +5,5 @@ import Prelude
 import Control.Monad.Eff
 import Control.Monad.Eff.Console
 
-main = Eff (console :: Console) Unit
+main :: Eff (console :: CONSOLE) Unit
 main = pure unit
