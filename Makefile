@@ -11,10 +11,15 @@ client-setup:
 	(cd client ; bower i)
 
 client-build:
-	(cd client ; pulp build)
+	cd client
+	pulp build
 
 client-compile:
-	(cd client ; pulp build -O --to ../static/index/main.js)
+	( cd client ; pulp build --to ../static/index/main.js ; pulp build --to ../static/room/main.js ; cp -r output/ ../)
+	cp -r static/css/bootstrap/ static/index
+	cp -r static/css/bootstrap/ static/room
+	cp static/css/style.css static/index
+	cp static/css/style.css static/room
 
 server: server-setup server-build
 

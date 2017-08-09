@@ -1,28 +1,170 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Room</title>
 
-    <link rel="stylesheet" href="styles.css"></link>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Starter Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet"> 
+
+    <!-- Code mirror -->
+    <link href="codemirror/lib/codemirror.css" rel="stylesheet">
+    <link href="codemirror/theme/monokai.css" rel="stylesheet">
+    <script src="codemirror/lib/codemirror.js"></script>
+    <script src="codemirror/mode/haskell/haskell.js"></script>
+
+    <!-- Custom styles for this template -->
+    <link href="style.css" rel="stylesheet">
+
   </head>
-  <body>
-    <div id="main" class="main">
-      <div id="chat_box" class="chatbox">
-        <div id="chat_box_messages">
-          <ul name="chat_box_messages_content">
+
+  <body style="height:100vh;width:100vw;margin:0px;padding:0px;">
+    
+
+    <nav class="navbar-inverse" style="height:5%;">
+        <div class="nav navbar-nav navbar-left" style="height:100%;">
+          <li><a class="navbar-project">Collab</a></li>
+        </div>
+        <div class="nav navbar-nav" style="height:100%;">
+          <li><a class="navbar-project">Room 46</a></li>
+        </div>
+        <div id="navbar" class="navbar-right" style="height:100%;padding:0px;margin:0px;">
+          <ul class="nav navbar-nav" style="margin:0px;padding:0px;">
+            <li><a href="#">Logged in as Guest #123</a></li>
+            <li><a href="#about">Logout</a></li>
+            <li><a href="#contact">Settings</a></li>
           </ul>
         </div>
-        <div id="chat_box_message">
-          <textarea id="chat_box_message_input" name="chat_box_message_input">test</textarea>
-          <button name="chat_box_message_send" name="chat_box_message_send">send</button>
+    </nav>  
+
+    <div style="height:95%;width:100%;margin:0px;padding:0px;">
+        <div class="col-xs-3" style="height:100%;margin:0px;padding:0px;display:flex;flex-direction:column;float:left;background-color:#31363d;border-right: 1px solid #44679b;">
+          <div class="col-xs-3 scrollbar-y scroll4" style="width:100%;margin:0px;padding:0px;flex-grow:1;">
+            <ul class="list-group">
+              <li class="list-group-item chat-message">Guest #1234: Message</li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+              <li class="list-group-item chat-message">
+                <span>Guest #1234</span>: Message2
+              </li>
+
+            </ul>
+          </div>
+          <div class="col-xs-3" style="min-height:75px;width:100%;">
+            <form class="form-horizontal">
+              <div style="width:100%;padding-top:0px;">
+                <div  style="display:table-cell;width:100%;">
+                  <textarea class="form-control" rows="2" style="resize:none;background-color:#31363d; border-color:aqua;border-radius:0px;"></textarea>
+                </div>
+                <div style="display:table-cell;vertical-align:middle;padding-left:5px;">
+                  <button type="submit" class="btn btn-default" style="background-color:#31363d;border-radius:0px;">Send</button>
+                </div>
+              </div>
+            </form>
+          </div>  
+        </div>
+        <div class="col-xs-9" style="height:100%;margin:0px;padding:0px;float:left;">
+           <div class="col-xs-9" style="height:70%;width:100%;padding:0px;margin:0px;">
+            <textarea id="editor"></textarea>
+          </div> 
+          <div class="col-xs-9" style="height:30%;width:100%;margin:0px;padding:0px;">
+            <div style="height:100%;display:flex;flex-direction:column;background-color:#31363d;border-top: 1px solid #44679b;border-right: 1px solid #44679b;">
+              <ul class="list-group" style="flex-grow:1;">
+                <li class="list-group-item tm-message">line1</li>
+                <li class="list-group-item tm-message">line2</li>
+              </ul>
+              <textarea rows="1" style="resize:none;border:none;border-top: 1px solid #44679b;outline:none;background-color:#31363d;"></textarea>
+            </div>
+          </div> 
         </div>
       </div>
-      <div id="workframe" class="workframe">
-        <div id="editor" class="editor"></div>
-        <div id="terminal" class="terminal"></div>
-      </div>
-      <div id="navbar" class="navbar"></div>
     </div>
-    <script type="text/javascript" src="main.js"></script>
+
+    <script type="text/javascript">
+      var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        lineNumbers : true,
+        value : "module Main where",
+        mode : { name: "haskell"},
+        tabSize: 2,
+        theme : "monokai"
+      });
+    </script>
   </body>
 </html>

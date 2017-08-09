@@ -14,7 +14,7 @@ import Room
 
 type API = API_All
     :<|> HTML_Room
-    :<|> HTML_Index
+    :<|> Raw
 
 type HTML_Room = "room" :> Capture "id" Integer :> Raw
 type HTML_Index = Raw

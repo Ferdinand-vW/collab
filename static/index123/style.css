@@ -1,0 +1,95 @@
+.navbar-vh {
+  height: 5vh;
+  margin: 0px;
+  padding: 0px;
+  font-size: 1em;
+}
+
+.navbar-name {
+  text-align: center;
+}
+
+.navbar-project {
+  float: left;
+  font-size: 15pt;
+}
+
+.navbar-option {
+  float:left;
+  margin:0px;
+}
+
+.navbar-center {
+  display: inline-block;
+  text-align: center;
+}
+
+.vertical-center {
+  min-height: 100%;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+
+.flex {
+  display:flex;
+}
+
+.flex-bottom {
+  align-self: flex-end;
+}
+
+.no-padding {
+  padding:0px;
+}
+
+.no-margin {
+  margin:0px;
+}
+
+.scrollbar-y {
+    float: left;
+    overflow-y: scroll;
+    background-color:#31363d;
+}
+
+.scrollbar {
+  background-color: #F5F5F5;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: nowrap;
+}
+
+.input-group-space {
+  padding-left:10px;
+}
+
+.scroll4::-webkit-scrollbar {
+  width: 10px;
+}
+ 
+.scroll4::-webkit-scrollbar-thumb {
+  background: #666;
+  border-radius: 0px;
+}
+
+.scroll4::-webkit-scrollbar-track {
+  background: #31363d;
+  border-radius: 0px;
+}
+
+.chat-message {
+  background-color:blue;
+  background:transparent;
+  color:#44679b;
+  border:none;
+  padding-top:2px;
+}
+
+.tm-message {
+  background:transparent;
+  border:none;
+  color:white;
+  padding: 0px;
+  margin: 0px;
+}

@@ -30,18 +30,17 @@ import Time
 import AppWai
 
 server :: Server API
-server = enter appToHandle roomApi :<|> (runWaiAsApp . serveRoom) :<|> serveIndex
+server = enter appToHandle roomApi :<|> (runWaiAsApp . compileRoom) :<|> serveIndex
 
 serveIndex :: Server HTML_Index
-serveIndex = serveDirectoryFileServer "static/index"
+serveIndex = serveDirectoryFileServer "static/index123"
 
-serveRoom :: Integer -> AppMWai
-serveRoom n req resp = do
-  mroom <- App.getRoom n
-  case mroom of
+compileRoom :: Integer -> AppMWai
+compileRoom n req resp = do
+  case (Just 46) >>= Just . App.getRoom of
     Nothing -> do
       lift $ throwError $ err404
-    Just room -> liftIO $ compile "room/index.mustache" room "static/room/index.html"
+    Just mroom -> mroom >>= \room -> liftIO $ compile "room/index.mustache" room "static/room/index.html" 
 
   liftIO $ serveDirectoryFileServer "static/room" req resp
 

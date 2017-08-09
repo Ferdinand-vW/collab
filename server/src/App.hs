@@ -67,20 +67,20 @@ appToHandle' app = do
 appToHandle :: AppM Handler :~> Handler
 appToHandle = NT appToHandle'
 
-getRoom :: (MonadIO m, Monad m) => Integer -> AppM m (Maybe Room)
+getRoom :: MonadIO m => Integer -> AppM m (Maybe Room)
 getRoom n = do
   conn <- AppM ask
   rtuple <- mItem $ selectRoom conn n
   return $ fmap (\(rid,ltime,uid) -> Room rid (toDateTime ltime) uid) rtuple
 
-makeRoomWUser :: (MonadIO m, Monad m) => String -> AppM m Integer
+makeRoomWUser :: MonadIO m => String -> AppM m Integer
 makeRoomWUser uname = do
   ltime <- liftIO $ getLocalTime
   conn <- AppM ask
   (uid, _) <- sItem $ selectUser conn uname
   sItem $ insertRoom conn ltime (Just uid)
 
-makeRoom :: (MonadIO m, Monad m) => AppM m Integer
+makeRoom :: MonadIO m => AppM m Integer
 makeRoom = do
   ltime <- liftIO $ getLocalTime
   conn <- AppM ask
