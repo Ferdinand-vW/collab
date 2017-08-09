@@ -12,7 +12,8 @@ import Time
 
 data Room = Room
     { rid :: Integer
-    , created :: DateTime
+    , rname :: String
+    , rcreated :: DateTime
     , uid :: Maybe Integer
     } deriving Generic
 

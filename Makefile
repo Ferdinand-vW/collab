@@ -4,15 +4,13 @@ setup: client-setup server-setup
 
 build: client-build server-build
 
-client:
-	(client-setup ; client-build)
+client: client-setup client-build client-compile
 
 client-setup:
 	(cd client ; bower i)
 
 client-build:
-	cd client
-	pulp build
+	(cd client ; pulp build)
 
 client-compile:
 	( cd client ; pulp build --to ../static/index/main.js ; pulp build --to ../static/room/main.js ; cp -r output/ ../)
@@ -20,6 +18,9 @@ client-compile:
 	cp -r static/css/bootstrap/ static/room
 	cp static/css/style.css static/index
 	cp static/css/style.css static/room
+
+client-psci:
+	(cd client ; pulp psci)
 
 server: server-setup server-build
 

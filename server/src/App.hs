@@ -6,6 +6,7 @@ module App where
 import Data.List (find)
 import Data.Time.Clock
 import Control.Monad
+import Control.Concurrent
 import Control.Monad.Except
 import Control.Monad.Logger
 import Control.Monad.Reader
@@ -19,7 +20,16 @@ import API (api)
 import Room
 import Time
 
-newtype AppM m a = AppM { runAppM :: ReaderT Connection (LoggingT m) a }
+newtype AppM m a = AppM { runAppM :: ReaderT Config (LoggingT m) a }
+
+data Config = Config { writeLock :: MVar ()
+                     , conn :: Connection }
+
+newConfig :: IO Config
+newConfig = do
+  conn <- makeConnection
+  mv <- newMVar ()
+  return $ Config mv conn
 
 instance Monad m => Functor (AppM m) where
   fmap f (AppM r) = AppM $ fmap f r
@@ -44,6 +54,16 @@ instance MonadIO m => MonadLogger (AppM m) where
 instance MonadIO m => MonadLoggerIO (AppM m) where
   askLoggerIO = AppM askLoggerIO
 
+getConn :: Monad m => AppM m Connection
+getConn = AppM $ do
+  config <- ask
+  return $ conn config
+
+getWriteLock :: Monad m => AppM m (MVar ())
+getWriteLock = AppM $ do
+  config <- ask
+  return $ writeLock config
+
 sItem :: (MonadIO m, Monad m) => IO [a] -> AppM m a
 sItem io = do
   d <- liftIO io
@@ -58,32 +78,37 @@ mItem io = do
     [] -> return Nothing
     (x:_) -> return $ Just x
 
-appToHandle' :: AppM Handler a -> Handler a
-appToHandle' app = do
-  conn <- liftIO makeConnection
-  let logger = (runReaderT (runAppM app) conn)
+appToHandle' :: Config -> AppM Handler a -> Handler a
+appToHandle' cfg app = do
+  let logger = (runReaderT (runAppM app) cfg)
   runStdoutLoggingT logger
 
-appToHandle :: AppM Handler :~> Handler
-appToHandle = NT appToHandle'
+appToHandle :: Config -> AppM Handler :~> Handler
+appToHandle cfg = NT $ appToHandle' cfg
 
-getRoom :: MonadIO m => Integer -> AppM m (Maybe Room)
-getRoom n = do
-  conn <- AppM ask
-  rtuple <- mItem $ selectRoom conn n
-  return $ fmap (\(rid,ltime,uid) -> Room rid (toDateTime ltime) uid) rtuple
+getRoomById :: MonadIO m => Integer -> AppM m (Maybe Room)
+getRoomById n = do
+  conn <- getConn
+  rtuple <- mItem $ selectRoomById conn n
+  return $ fmap (\(rid,rname, ltime,uid) -> Room rid rname (toDateTime ltime) uid) rtuple
 
-makeRoomWUser :: MonadIO m => String -> AppM m Integer
-makeRoomWUser uname = do
+getRoomByName :: MonadIO m => String -> AppM m (Maybe Room)
+getRoomByName s = do
+  conn <- getConn
+  rtuple <- mItem $ selectRoomByName conn s
+  return $ fmap (\(rid,rname, ltime,uid) -> Room rid rname (toDateTime ltime) uid) rtuple
+
+makeRoomWUser :: MonadIO m => String -> String -> AppM m Integer
+makeRoomWUser rname uname = do
   ltime <- liftIO $ getLocalTime
-  conn <- AppM ask
+  conn <- getConn
   (uid, _) <- sItem $ selectUser conn uname
-  sItem $ insertRoom conn ltime (Just uid)
+  sItem $ insertRoom conn rname ltime (Just uid)
 
-makeRoom :: MonadIO m => AppM m Integer
-makeRoom = do
+makeRoom :: MonadIO m => String -> AppM m Integer
+makeRoom rname = do
   ltime <- liftIO $ getLocalTime
-  conn <- AppM ask
-  sItem $ insertRoom conn ltime Nothing
+  conn <- getConn
+  sItem $ insertRoom conn rname ltime Nothing
 
       

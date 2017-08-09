@@ -3,7 +3,7 @@ module Template where
 
 import           Control.Monad.IO.Class
 import           Text.Mustache
-import qualified Data.Text.IO               as TIO
+import qualified Data.Text as T
 
 import Room
 
@@ -15,4 +15,4 @@ compile src a trg = do
         Left err -> liftIO $ print err
         Right tmp -> do
             let t = substitute tmp a
-            liftIO $ TIO.writeFile trg t
+            liftIO $ writeFile trg (T.unpack t)

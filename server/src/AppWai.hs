@@ -1,5 +1,6 @@
 module AppWai where
 
+import Control.Concurrent
 import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.Trans.Class
@@ -26,10 +27,9 @@ type AppMWai = Request -> (Response -> IO ResponseReceived) -> AppM Handler Resp
 handlerToAppWai :: HandlerWai -> AppMWai
 handlerToAppWai f req resp = lift $ f req resp
 
-appToHandlerWai :: AppMWai -> HandlerWai
-appToHandlerWai f req resp = do
-  conn <- liftIO makeConnection
-  runStdoutLoggingT $ runReaderT (runAppM $ f req resp) conn
+appToHandlerWai :: Config -> AppMWai -> HandlerWai
+appToHandlerWai cfg f req resp = do
+  runStdoutLoggingT $ runReaderT (runAppM $ f req resp) cfg
 
-runWaiAsApp :: AppMWai -> Application
-runWaiAsApp = handlerToWai . appToHandlerWai
+runWaiAsApp :: Config -> AppMWai -> Application
+runWaiAsApp config = handlerToWai . appToHandlerWai config

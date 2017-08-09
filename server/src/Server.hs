@@ -11,6 +11,7 @@ module Server (
 import Control.Monad.Logger
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
+import Control.Concurrent
 import Control.Monad.Reader
 import qualified Data.Text.IO as TIO
 import qualified Data.Text as T
@@ -21,38 +22,40 @@ import Servant
 import Servant.Server.Internal.ServantErr (responseServantErr)
 import Servant.Utils.StaticFiles
 
-import App (AppM, appToHandle, makeRoom, makeRoomWUser, getRoom)
-import Database (insertRoom, selectRoom)
+import App (AppM, appToHandle, makeRoom, makeRoomWUser, getRoomById, getRoomByName, getWriteLock, Config)
 import API
 import Room
 import Template
 import Time
 import AppWai
 
-server :: Server API
-server = enter appToHandle roomApi :<|> (runWaiAsApp . compileRoom) :<|> serveIndex
+server :: Config -> Server API
+server cfg = enter (appToHandle cfg) roomApi :<|> (runWaiAsApp cfg . compileRoom) :<|> serveIndex
 
 serveIndex :: Server HTML_Index
-serveIndex = serveDirectoryFileServer "static/index123"
+serveIndex = serveDirectoryFileServer "static/index"
 
 compileRoom :: Integer -> AppMWai
 compileRoom n req resp = do
-  case (Just 46) >>= Just . App.getRoom of
+  case (Just 46) >>= Just . App.getRoomById of
     Nothing -> do
       lift $ throwError $ err404
-    Just mroom -> mroom >>= \room -> liftIO $ compile "room/index.mustache" room "static/room/index.html" 
-
+    Just mroom -> mroom >>= \room -> do
+      mv <- getWriteLock
+      liftIO $ do
+        takeMVar mv
+        compile "room/index.mustache" room "static/room/index.html"
+        putMVar mv ()
   liftIO $ serveDirectoryFileServer "static/room" req resp
 
 roomApi :: ServerT API_Room (AppM Handler)
-roomApi = createRoom :<|> Server.getRoom
+roomApi = createRoom :<|> Server.getRoomByName :<|> Server.getRoomById
 
-createRoom :: Maybe String -> AppM Handler Integer
-createRoom Nothing = makeRoom
-createRoom (Just uname) = makeRoomWUser uname
+createRoom :: String -> Maybe String -> AppM Handler Integer
+createRoom rname mb = maybe (makeRoom rname) (makeRoomWUser rname) mb
 
+getRoomByName :: String -> AppM Handler (Maybe Room)
+getRoomByName s = App.getRoomByName s
   
-
--- API_Room
-getRoom :: Integer -> AppM Handler (Maybe Room)
-getRoom n = App.getRoom n
+getRoomById :: Integer -> AppM Handler (Maybe Room)
+getRoomById n = App.getRoomById n
