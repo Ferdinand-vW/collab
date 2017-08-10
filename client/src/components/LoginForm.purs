@@ -33,7 +33,11 @@ render (LoginFormState s) | s.loggedIn = renderLogout
          | otherwise = renderLogin
 
 renderLogout :: H.ComponentHTML LoginFormInput
-renderLogout = HH.div [] []
+renderLogout = HH.div 
+  [ HP.class_ $ H.ClassName "navbar-right"]
+  [ ]
+
+
 <div id="navbar" class="navbar-right" style="height:100%;padding:0px;margin:0px;">
           <ul class="nav navbar-nav" style="margin:0px;padding:0px;">
             <li><a href="#">Logged in as Guest #123</a></li>
