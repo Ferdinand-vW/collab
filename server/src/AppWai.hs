@@ -6,30 +6,43 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Class
 
 import Servant
+import Servant.Server
 import Servant.Server.Internal.ServantErr (responseServantErr)
 import Network.Wai (ResponseReceived, Request, Response)
 
 import App
 import Database
 
-type HandlerWai = Request -> (Response -> IO ResponseReceived) -> Handler ResponseReceived
+newtype AppHWai a = AppHWai { runAppHWai :: Request -> (Response -> IO ResponseReceived) -> AppM Handler a }
 
-handlerToWai :: HandlerWai -> Application
-handlerToWai h req resp = do
-  eth <- runHandler $ h req resp
+instance Functor AppHWai where
+  fmap f m = pure f <*> m
+
+instance Applicative AppHWai where
+  pure = return
+  (<*>) = ap
+
+instance Monad AppHWai where
+  return a = AppHWai $ \_ _ -> return a
+  (AppHWai f) >>= g = AppHWai $ \req rsp -> do
+    a <- f req rsp
+    runAppHWai (g a) req rsp
+
+instance MonadIO AppHWai where
+  liftIO m = AppHWai $ \_ _ -> liftIO m
+
+liftH :: Handler a -> AppHWai a
+liftH h = AppHWai $ \_ _ -> lift h
+
+liftA :: AppM Handler a -> AppHWai a
+liftA m = AppHWai $ \_ _ -> m
+
+liftRaw :: Server Raw -> AppHWai ResponseReceived
+liftRaw s = AppHWai $ \req f -> liftIO $ unTagged s req f
+
+runWaiAsApp :: Config -> AppHWai ResponseReceived -> Application
+runWaiAsApp cfg (AppHWai f) req resp = do
+  eth <- runHandler $ runStdoutLoggingT $ runReaderT (runAppM $ f req resp) cfg
   case eth of
     Left err -> resp $ responseServantErr err
-    Right resp -> return resp
-
-
-type AppMWai = Request -> (Response -> IO ResponseReceived) -> AppM Handler ResponseReceived
-
-handlerToAppWai :: HandlerWai -> AppMWai
-handlerToAppWai f req resp = lift $ f req resp
-
-appToHandlerWai :: Config -> AppMWai -> HandlerWai
-appToHandlerWai cfg f req resp = do
-  runStdoutLoggingT $ runReaderT (runAppM $ f req resp) cfg
-
-runWaiAsApp :: Config -> AppMWai -> Application
-runWaiAsApp config = handlerToWai . appToHandlerWai config
+    Right rsp -> return rsp 
