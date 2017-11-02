@@ -1,14 +1,15 @@
-module Index.IndexForm where
+module Component.IndexForm where
 
-import Prelude
-import Data.Typelevel.Undefined
+import Prelude (class Show, type (~>), Unit, Void, bind, bottom, const, discard, pure, show, unit, ($), (<>), (>>=))
 import Halogen as H
+import Halogen.Aff as HA
+import Halogen.VDom.Driver (runUI)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Control.Monad.Aff (Aff, launchAff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (class MonadEff, liftEff)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
@@ -16,23 +17,28 @@ import DOM (DOM)
 import DOM.HTML (window)
 import DOM.HTML.Location (replace)
 import DOM.HTML.Window (location)
-import Data.Argonaut (class DecodeJson, decodeJson, (.?), toString)
-import Data.DateTime (DateTime(..), Date, canonicalDate, Year(..), Month(..), Day(..), Time(..), Hour(..), Minute(..), Second(..), Millisecond(..), setHour, setSecond, setMinute, setMillisecond)
+import Data.Argonaut (class DecodeJson, decodeJson, (.?))
+import Data.DateTime (Date, DateTime(DateTime), Time, canonicalDate, setHour, setMillisecond, setMinute, setSecond)
 import Data.Enum (toEnum)
 import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
 import Data.JSDate (parse, toDateTime)
 import Data.Maybe (Maybe(Just, Nothing))
-import Data.Time (Millisecond)
+import Data.Newtype (wrap)
 import Network.HTTP.Affjax (affjax, defaultRequest, AJAX)
-import Partial.Unsafe (unsafePartial)
-
 
 data FormInput a = JoinRoom a
                | JoinRoomInput String a
                | CreateRoom a
-               | CreateRoomInput String a
+               | CreateRoomInput String a 
 
+insertIndexForm :: Eff (HA.HalogenEffects (console :: CONSOLE, dom :: DOM, ajax :: AJAX)) Unit
+insertIndexForm = HA.runHalogenAff $ do
+  HA.awaitLoad
+  mroom <- HA.selectElement (wrap "#index-form")
+  case mroom of
+    Nothing -> liftEff $ log "Could not find #index-form"
+    Just k -> runUI indexPageForm unit k >>= \_ -> pure unit
 
 indexPageForm :: forall eff. H.Component HH.HTML FormInput Unit Void (Aff (console :: CONSOLE, ajax :: AJAX, dom :: DOM, exception :: EXCEPTION | eff))
 indexPageForm =
@@ -175,11 +181,11 @@ instance decodeJsonTimeNT :: DecodeJson TimeNT where
     s <- obj .? "s"
     ml <- obj .? "ml"
     let mtime = do
-                  h' <- toEnum h
-                  m' <- toEnum m
-                  s' <- toEnum s
-                  ml' <- toEnum ml
-                  pure $ TimeNT $ setHour h' $ setMinute m' $ setSecond s' $ setMillisecond ml' bottom
+                h' <- toEnum h
+                m' <- toEnum m
+                s' <- toEnum s
+                ml' <- toEnum ml
+                pure $ TimeNT $ setHour h' $ setMinute m' $ setSecond s' $ setMillisecond ml' bottom
     case mtime of
       Nothing -> Left "Failed to parse Time"
       Just tm -> Right tm

@@ -13,11 +13,15 @@ client-build:
 	(cd client ; pulp build)
 
 client-compile:
-	( cd client ; pulp build --to ../static/index/main.js ; pulp build --to ../static/room/main.js ; cp -r output/ ../)
+	( cd client ; pulp build --to ../static/index/main.js ; cp -r output/ ../)
+	cp static/index/main.js static/room/main.js
+	cp static/index/main.js static/register/main.js
 	cp -r static/css/bootstrap/ static/index
 	cp -r static/css/bootstrap/ static/room
+	cp -r static/css/bootstrap/ static/register
 	cp static/css/style.css static/index
 	cp static/css/style.css static/room
+	cp static/css/style.css static/register
 
 client-psci:
 	(cd client ; pulp psci)

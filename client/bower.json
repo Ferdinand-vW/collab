@@ -7,12 +7,15 @@
     "output"
   ],
   "dependencies": {
+    "purescript-base64": "^2.1.0",
     "purescript-affjax": "^4.0.0",
     "purescript-halogen": "^2.1.0",
     "purescript-argonaut": "^3.0.0",
     "purescript-typelevel": "^3.0.0",
     "purescript-psci-support": "^3.0.0",
-    "purescript-datetime": "^3.3.0"
+    "purescript-datetime": "^3.3.0",
+    "purescript-foldable-traversable": "^3.6.1",
+    "purescript-generics-rep": "^5.3.0"
   },
   "devDependencies": {}
 }

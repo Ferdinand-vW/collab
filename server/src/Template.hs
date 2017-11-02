@@ -5,8 +5,6 @@ import           Control.Monad.IO.Class
 import           Text.Mustache
 import qualified Data.Text as T
 
-import Room
-
 compile :: ToMustache a => String -> a -> String -> IO ()
 compile src a trg = do
     compiled <- liftIO $ automaticCompile ["./templates"] src

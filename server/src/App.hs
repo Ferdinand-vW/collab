@@ -3,6 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 module App where
 
+import Data.ByteString.Char8
 import Data.List (find)
 import Data.Time.Clock
 import Control.Monad
@@ -16,8 +17,8 @@ import Servant
 import Servant.Utils.Enter (enter, (:~>)(NT),)
 
 import Database
-import API (api)
-import Room
+import Object.Room
+import Object.User
 import Time
 
 newtype AppM m a = AppM { runAppM :: ReaderT Config (LoggingT m) a }
@@ -86,6 +87,17 @@ appToHandle' cfg app = do
 appToHandle :: Config -> AppM Handler :~> Handler
 appToHandle cfg = NT $ appToHandle' cfg
 
+addUser :: MonadIO m => String -> ByteString -> AppM m Integer
+addUser uname upass = do
+  conn <- getConn
+  sItem $ insertUser conn uname upass
+
+getUserByName :: MonadIO m => String -> AppM m (Maybe User)
+getUserByName s = do
+  conn <- getConn
+  utuple <- mItem $ selectUserByName conn s
+  return $ fmap (\(uid, uname, _) -> User uid uname) utuple
+
 getRoomById :: MonadIO m => Integer -> AppM m (Maybe Room)
 getRoomById n = do
   conn <- getConn
@@ -102,8 +114,8 @@ makeRoomWUser :: MonadIO m => String -> String -> AppM m Integer
 makeRoomWUser rname uname = do
   ltime <- liftIO $ getLocalTime
   conn <- getConn
-  (uid, _) <- sItem $ selectUser conn uname
-  sItem $ insertRoom conn rname ltime (Just uid)
+  muser <- getUserByName uname
+  sItem $ insertRoom conn rname ltime (fmap userid muser)
 
 makeRoom :: MonadIO m => String -> AppM m Integer
 makeRoom rname = do

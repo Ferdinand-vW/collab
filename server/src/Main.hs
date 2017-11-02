@@ -1,14 +1,14 @@
 {-# LANGUAGE TypeOperators #-}
 module Main where
 
-import Servant (serve, enter, Server, ServerT, Handler, (:~>))
-import App
+import Servant (serveWithContext)
 import Network.Wai.Handler.Warp (run)
-import Control.Monad.Reader
+import App
 import Server (server)
-import API (api, API, API_All)
+import API (api)
+import Authentication
 
 main :: IO ()
 main = do
   config <- newConfig
-  run 8082 $ serve api $ server config
+  run 8082 $ serveWithContext api basicAuthServerContext $ server config

@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Room where
+module Object.Room where
 
 import Data.Aeson.Compat (ToJSON)
 import GHC.Generics
@@ -22,7 +22,6 @@ instance ToJSON Room
 instance ToMustache Room where
     toMustache room = object
         [ T.pack "id" ~> rid room]
-
 
 data RoomNotFound = RoomNotFound Integer
 
