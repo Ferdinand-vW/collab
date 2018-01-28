@@ -3,7 +3,8 @@
 {-# LANGUAGE RankNTypes #-}
 module App where
 
-import Data.ByteString.Char8
+import Data.ByteString.Char8 as B
+import Data.Default (def)
 import Data.List (find)
 import Data.Time.Clock
 import Control.Monad
@@ -13,8 +14,10 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
+import Crypto.Random (drgNew)
 import Servant
 import Servant.Utils.Enter (enter, (:~>)(NT),)
+import Servant.Server.Experimental.Auth.Cookie
 
 import Database
 import Object.Room
@@ -24,13 +27,20 @@ import Time
 newtype AppM m a = AppM { runAppM :: ReaderT Config (LoggingT m) a }
 
 data Config = Config { writeLock :: MVar ()
-                     , conn :: Connection }
+                     , conn :: Connection
+                     , cookies :: AuthCookieSettings
+                     , rndSource :: RandomSource
+                     , serverKey :: PersistentServerKey
+                     }
 
 newConfig :: IO Config
 newConfig = do
   conn <- makeConnection
   mv <- newMVar ()
-  return $ Config mv conn
+  let settings = (def :: AuthCookieSettings) {acsCookieFlags = [B.pack "HttpOnly"]}
+  rs <- mkRandomSource drgNew 1000
+  let sk = mkPersistentServerKey (B.pack "0123456789abcdef")
+  return $ Config mv conn settings rs sk
 
 instance Monad m => Functor (AppM m) where
   fmap f (AppM r) = AppM $ fmap f r
@@ -59,6 +69,9 @@ getConn :: Monad m => AppM m Connection
 getConn = AppM $ do
   config <- ask
   return $ conn config
+
+getConfig :: Monad m => AppM m Config
+getConfig = AppM ask
 
 getWriteLock :: Monad m => AppM m (MVar ())
 getWriteLock = AppM $ do
@@ -96,7 +109,7 @@ getUserByName :: MonadIO m => String -> AppM m (Maybe User)
 getUserByName s = do
   conn <- getConn
   utuple <- mItem $ selectUserByName conn s
-  return $ fmap (\(uid, uname, _) -> User uid uname) utuple
+  return $ fmap (\(uid, uname, upass) -> User uid uname upass) utuple
 
 getRoomById :: MonadIO m => Integer -> AppM m (Maybe Room)
 getRoomById n = do
@@ -115,7 +128,7 @@ makeRoomWUser rname uname = do
   ltime <- liftIO $ getLocalTime
   conn <- getConn
   muser <- getUserByName uname
-  sItem $ insertRoom conn rname ltime (fmap userid muser)
+  sItem $ insertRoom conn rname ltime (fmap uid muser)
 
 makeRoom :: MonadIO m => String -> AppM m Integer
 makeRoom rname = do

@@ -11,4 +11,4 @@ import Authentication
 main :: IO ()
 main = do
   config <- newConfig
-  run 8082 $ serveWithContext api basicAuthServerContext $ server config
+  run 8082 $ serveWithContext api (basicAuthServerContext (cookies config) (serverKey config)) $ server config

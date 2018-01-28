@@ -1,9 +1,5 @@
 module Component.LoginForm where
 
-import Prelude (type (~>), Unit, Void, bind, const, discard, otherwise, pure, show, unit, ($), (/=), (<>), (>>=))
-import Data.Either (Either(..))
-import Network.HTTP.RequestHeader (RequestHeader(..))
-import Network.HTTP.StatusCode (StatusCode(..))
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -15,32 +11,38 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import DOM (DOM)
+import Data.Argonaut.Decode (decodeJson)
+import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Newtype (wrap)
 import Halogen (liftAff)
 import Halogen.VDom.Driver (runUI)
 import Network.HTTP.Affjax (AJAX, AffjaxResponse, affjax, defaultRequest)
+import Network.HTTP.RequestHeader (RequestHeader(..))
+import Network.HTTP.StatusCode (StatusCode(..))
+import Prelude (type (~>), Unit, Void, bind, const, discard, otherwise, pure, show, unit, ($), (/=), (<>), (>>=))
 import Text.Base64 (encode64)
 
 insertLoginForm :: Eff (HA.HalogenEffects (console :: CONSOLE, dom :: DOM, ajax :: AJAX)) Unit
 insertLoginForm = HA.runHalogenAff $ do
   HA.awaitLoad
+  lfs <- checkLoginStatus
   lform <- HA.selectElement $ wrap "#login-form"
   case lform of
     Nothing -> liftEff $ log "Could not find #login-form"
-    Just k -> runUI loginForm unit k >>= \_ -> pure unit
+    Just k -> runUI (loginForm lfs) unit k >>= \_ -> pure unit
 
 data LoginFormInput a = Password_Input String a
-                  | UserId_Input String a
+                  | Username_Input String a
                   | Login_Submit a
 
-data LoginFormState = LoginFormState { userid :: String, pass :: String, loggedIn :: Boolean }
+data LoginFormState = LoginFormState { uname :: String, pass :: String, loggedIn :: Boolean }
 
-loginForm :: forall eff. H.Component HH.HTML LoginFormInput Unit Void (Aff (console :: CONSOLE, ajax :: AJAX, dom :: DOM, exception :: EXCEPTION | eff))
-loginForm =
+loginForm :: forall eff. LoginFormState -> H.Component HH.HTML LoginFormInput Unit Void (Aff (console :: CONSOLE, ajax :: AJAX, dom :: DOM, exception :: EXCEPTION | eff))
+loginForm lfs =
     H.component
-        { initialState: const $ LoginFormState { userid: "", pass: "", loggedIn: false }
+        { initialState: const $ lfs
         , render
         , eval
         , receiver: const Nothing
@@ -62,8 +64,8 @@ renderLogin = HH.form [ HP.class_ $ H.ClassName "navbar-form navbar-right" ]
     [ HH.input
       [ HP.type_ HP.InputText
       , HP.class_ $ H.ClassName "form-control"
-      , HP.placeholder "UserId"
-      , HE.onValueInput $ HE.input UserId_Input 
+      , HP.placeholder "Username"
+      , HE.onValueInput $ HE.input Username_Input 
       ]
     , HH.input
       [ HP.type_ HP.InputPassword
@@ -86,14 +88,14 @@ eval li = case li of
     LoginFormState lfs <- H.get
     H.put $ LoginFormState $ lfs { pass = s }
     pure next
-  UserId_Input s next -> do
+  Username_Input s next -> do
     LoginFormState lfs <- H.get
-    H.put $ LoginFormState $ lfs { userid = s }
+    H.put $ LoginFormState $ lfs { uname = s }
     pure next
   Login_Submit next -> do
     LoginFormState lfs <- H.get
-    H.put $ LoginFormState { userid: "", pass: "", loggedIn: true }
-    _ <- liftAff $ login lfs.userid lfs.pass
+    H.put $ LoginFormState { uname: "", pass: "", loggedIn: true }
+    _ <- liftAff $ login lfs.uname lfs.pass
     pure next
 
 login :: forall eff. String -> String -> Aff (console :: CONSOLE, ajax :: AJAX| eff ) Unit
@@ -103,3 +105,11 @@ login uname pw = do
   if res.status /= (StatusCode 200)
     then liftEff $ log $ show res.status
     else liftEff $ log "success"
+
+
+checkLoginStatus :: forall eff. Aff ( ajax :: AJAX | eff ) LoginFormState
+checkLoginStatus = do
+  res <- affjax $ defaultRequest { url = "/api/private/ping", method = Left GET }
+  case decodeJson res.response :: Either String String of
+    Left _ -> pure $ LoginFormState { uname: "", pass: "", loggedIn: false }
+    Right s -> pure $ LoginFormState { uname: s, pass: "", loggedIn: true }

@@ -14,7 +14,7 @@ data Room = Room
     { rid :: Integer
     , rname :: String
     , rcreated :: DateTime
-    , uid :: Maybe Integer
+    , r_uid :: Maybe Integer
     } deriving Generic
 
 instance ToJSON Room

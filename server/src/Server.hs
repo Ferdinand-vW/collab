@@ -4,8 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Server (
-    server,
-    roomApi
+    server
 ) where
 
 import Control.Monad.IO.Class
@@ -14,27 +13,28 @@ import Data.Maybe
 
 import Network.Wai (ResponseReceived)
 import Servant
+import Servant.Server.Experimental.Auth.Cookie
 
 import App
 import API
 import Object.Room
+import Object.User
 import Template
 import AppWai
 import Authentication
 import Validation as V
 
 server :: Config -> Server API
-server cfg = 
-  (    (enter (appToHandle cfg) roomApi
-        :<|> enter (appToHandle cfg) register
-       )  
-  :<|> (\(User uname) -> return uname)
-  )
-  :<|> (Tagged . runWaiAsApp cfg . servePageRoom)
-  :<|> servePageRegister
-  :<|> servePageIndex
+server cfg = enter (appToHandle cfg) publicApi
+        :<|> enter (appToHandle cfg) authApi
+        :<|> servePages cfg
 
-servePageIndex :: Server Page_Index
+servePages :: Config -> Server API_Pages
+servePages cfg = (Tagged . runWaiAsApp cfg . servePageRoom) 
+            :<|> servePageRegister 
+            :<|> servePageIndex
+
+servePageIndex :: Server Raw
 servePageIndex = serveDirectoryFileServer "static/index"
 
 servePageRoom :: Integer -> AppHWai ResponseReceived
@@ -50,11 +50,11 @@ servePageRoom n = do
         putMVar mv ()
   liftRaw $ serveDirectoryFileServer "static/room"
 
-servePageRegister :: Server Page_Register
+servePageRegister :: ServerT Raw Handler
 servePageRegister = serveDirectoryFileServer "static/register"
 
-roomApi :: ServerT API_Room (AppM Handler)
-roomApi = createRoom :<|> Server.getRoomByName :<|> Server.getRoomById
+publicApi :: ServerT API_Public (AppM Handler)
+publicApi = createRoom :<|> Server.getRoomByName :<|> Server.getRoomById :<|> register
 
 createRoom :: String -> Maybe String -> AppM Handler Integer
 createRoom rname mb = maybe (makeRoom rname) (makeRoomWUser rname) mb
@@ -64,7 +64,6 @@ getRoomByName s = App.getRoomByName s
   
 getRoomById :: Integer -> AppM Handler (Maybe Room)
 getRoomById n = App.getRoomById n
-
 
 register :: String -> String -> AppM Handler IsValid
 register uname upass = do
@@ -77,3 +76,6 @@ register uname upass = do
         Nothing -> return $ NotValid [] [V.BadPassword]
         Just pass -> addUser uname pass >> return Valid
     else return $ NotValid fdb_uname (catMaybes [fdb_pass])
+
+authApi :: ServerT API_Auth (AppM Handler)
+authApi = checkLogin :<|> logout :<|> verifyLoginStatus

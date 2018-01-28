@@ -17,10 +17,15 @@ executable collab-exe
   hs-source-dirs:      server/src
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  other-modules: Server, API, Object.Room, Object.User, Template, Database, App, Time, AppWai, Authentication, Validation
+  other-modules: Server, API, Object.Room, Object.User, Object.LoginForm, Object.Account, Template, Database, App, Time, AppWai, Authentication, Validation
   build-depends:       base
                      , servant
                     , servant-server
+                    , servant-auth-cookie
+                    , cereal
+                    , cryptonite
+                    , data-default
+                    , exceptions
                     , natural-transformation
                     , aeson
                     , aeson-compat
